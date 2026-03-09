@@ -35,6 +35,12 @@ jobs:
           java-version: '17'
           cache: 'gradle'
       
+      # Step 2.5: 清理 Gradle 缓存（防止旧配置影响）
+      - name: 🧹 Clean Gradle Cache
+        run: |
+          rm -rf ~/.gradle/caches/build-cache-1/
+          rm -rf .gradle/
+      
       # Step 3: 授予 Gradle 执行权限
       - name: 🔧 Grant execute permission for gradlew
         run: chmod +x gradlew
