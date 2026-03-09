@@ -9,6 +9,11 @@ plugins {
     kotlin("kapt") // Kotlin 注解处理
 }
 
+// Room 数据库配置
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 android {
     namespace = "com.steadywj.wjfakelocation"
     compileSdk = 35

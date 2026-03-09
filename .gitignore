@@ -8,6 +8,9 @@ local.properties
 /caches
 **/build/**
 
+# Room Database Schemas (可选保留)
+schemas/
+
 # ==================== 签名密钥库 ====================
 *.jks
 *.keystore
