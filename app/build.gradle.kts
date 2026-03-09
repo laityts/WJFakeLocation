@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.room)
     id("jacoco") // 代码覆盖率
+    kotlin("kapt") // Kotlin 注解处理
 }
 
 android {
@@ -141,16 +142,20 @@ dependencies {
 // ==================== Jacoco 代码覆盖率配置 ====================
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-    finalizedBy(tasks.jacocoTestReport)
 }
 
+// 创建 Jacoco 报告任务
 tasks.register<JacocoReport>("jacocoTestReport") {
-    dependsOn(tasks.test)
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports"
+    
+    dependsOn(tasks.named("testDebugUnitTest"))
     
     reports {
         xml.required.set(true)
         html.required.set(true)
         csv.required.set(false)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco"))
     }
     
     val fileFilter = listOf(
@@ -162,23 +167,25 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "android/**/*.*",
         "**/*Hilt*.*",
         "**/*_Factory.*",
-        "**/*_MembersInjector.*"
+        "**/*_MembersInjector.*",
+        "**/*_Impl*.*",
+        "**/*Module*.*"
     )
     
-    val kotlinTree = fileTree(mapOf(
-        "dir" to "$buildDir/tmp/kotlin-classes/debug",
-        "excludes" to fileFilter
-    ))
+    val kotlinClassesDir = layout.buildDirectory.dir("tmp/kotlin-classes/debug").get()
+    val javaClassesDir = layout.buildDirectory.dir("intermediates/javac/debug").get()
     
-    val javaTree = fileTree(mapOf(
-        "dir" to "$buildDir/intermediates/javac/debug",
-        "excludes" to fileFilter
-    ))
+    classDirectories.setFrom(
+        fileTree(mapOf("dir" to kotlinClassesDir, "excludes" to fileFilter)),
+        fileTree(mapOf("dir" to javaClassesDir, "excludes" to fileFilter))
+    )
     
-    classDirectories.setFrom(files(kotlinTree, javaTree))
-    sourceDirectories.setFrom(files("$projectDir/src/main/java"))
-    executionData.setFrom(fileTree(mapOf(
-        "dir" to "$buildDir",
-        "includes" to listOf("outputs/unit_test_code_coverage/**/**/*.exec")
-    )))
+    sourceDirectories.setFrom(files("$projectDir/src/main/java", "$projectDir/src/main/kotlin"))
+    
+    executionData.setFrom(
+        fileTree(mapOf(
+            "dir" to layout.buildDirectory,
+            "includes" to listOf("outputs/unit_test_code_coverage/**/*.exec", "jacoco/test.exec")
+        ))
+    )
 }
