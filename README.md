@@ -8,6 +8,7 @@
 ![Compose](https://img.shields.io/badge/Compose-1.7.0-blue?logo=jetpackcompose)
 ![Xposed](https://img.shields.io/badge/Xposed-LSPosed-red?logo=xda-developers)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/yourusername/WJFakeLocation/android-ci.yml?label=CI&logo=github)
+![GitHub Release](https://img.shields.io/github/v/release/yourusername/WJFakeLocation?label=Release&logo=github)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **强大的 Xposed 虚拟定位工具 · v2.0.0 完全体**
@@ -126,6 +127,8 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 | **Xposed** | LSPosed API | 9028 |
 | **序列化** | Kotlinx Serialization | 1.7.1 |
 | **数据持久化** | DataStore Preferences | 1.1.1 |
+| **代码质量** | Ktlint + Detekt | 1.0.1 + 1.23.4 |
+| **日志系统** | Timber | 5.0.1 |
 
 </div>
 
@@ -171,6 +174,24 @@ cd WJFakeLocation
 3. 解压后将 `BaiduLBS_Android.jar` 复制到 `app/libs/` 目录
 
 完成后运行 `./gradlew assembleDebug` 即可编译。
+
+💻 **代码质量工具（推荐）**
+
+项目已集成 Ktlint + Detekt，建议在开发过程中使用：
+
+```bash
+# 检查代码风格
+./gradlew ktlintCheck
+
+# 自动格式化代码
+./gradlew ktlintFormat
+
+# 静态代码分析
+./gradlew detekt
+
+# 综合质量检查（推荐）
+./gradlew codeQualityCheck
+```
 
 #### Step 2: 激活模块
 1. 打开 **LSPosed** 管理器
@@ -263,6 +284,9 @@ cd WJFakeLocation
 - [x] **性能监控体系**（方法计时 + FPS 监控）
 - [x] **UI/UX 细节打磨**（骨架屏 + 错误提示）
 - [x] **单元测试增强**（核心模块 70% 覆盖）
+- [x] **代码质量工具**（Ktlint + Detekt）
+- [x] **统一日志系统**（Timber + WJLogger）
+- [x] **CI/CD 自动化**（GitHub Release 工作流）
 
 ### 进行中 🚧
 - [ ] 情景模式 UI 对话框实现
@@ -328,6 +352,12 @@ cd WJFakeLocation
 - **权限请求**: 渐进式授权
 - **无障碍支持**: TalkBack 优化
 
+#### 8. 代码质量工具（NEW ✨）
+- **Ktlint**: 自动代码格式化
+- **Detekt**: 静态代码分析
+- **统一日志**: Timber + WJLogger
+- **CI/CD**: GitHub Release 自动化
+
 ### 📊 完成度对比
 
 | 模块 | v1.5.0 | v2.0.0 | 提升 |
@@ -347,6 +377,7 @@ cd WJFakeLocation
 | **离线地图** | 0% | **100%** | 🆕 新增 |
 | **性能监控** | 0% | **100%** | 🆕 新增 |
 | **UI/UX** | 75% | **95%** | ↑ 骨架屏 |
+| **代码质量** | 0% | **100%** | 🆕 Ktlint+Detekt |
 
 **总体完成度**: **100/100** ⭐⭐⭐⭐⭐
 
@@ -457,6 +488,16 @@ git push origin feature/amazing-feature
 - 📝 Kotlin 编码规范
 - ✨ Conventional Commits
 - 🧪 单元测试覆盖核心逻辑
+- 🔍 通过 Ktlint + Detekt 检查
+
+### 开发环境配置
+```bash
+# 1. 安装 JDK 17
+# 2. 安装 Android Studio Hedgehog+
+# 3. 配置 Android SDK
+# 4. 克隆项目后运行
+./gradlew codeQualityCheck  # 验证环境配置
+```
 
 ---
 
@@ -508,7 +549,7 @@ MIT License - 详见 [LICENSE](LICENSE)
 
 | 版本 | 日期 | 状态 | 亮点 |
 |------|------|------|------|
-| **v2.0.0** | 2026-03-09 | 🎉 完全体 | 多地图 + 云同步 + 离线地图 + CI/CD |
+| **v2.0.0** | 2026-03-09 | 🎉 完全体 | 多地图 + 云同步 + 离线地图 + CI/CD + 代码质量工具 |
 | **v1.5.0** | 2026-03-08 | ✅ 企业版 | 基站/WiFi 伪造 |
 | **v1.3.0** | 2026-03-07 | ✅ 优化版 | Clean Architecture |
 | **v1.0.0** | 2026-03-06 | 🎯 初始版 | 基础定位伪造 |
