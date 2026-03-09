@@ -1,0 +1,234 @@
+# CI/CD 自动化工作流
+# 功能：自动编译、测试、签名打包、发布
+
+name: Android CI/CD
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ "main" ]
+
+# 环境变量
+env:
+  VERSION_NAME: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+  VERSION_CODE: ${{ github.run_number }}
+
+jobs:
+  # ==================== 1. 构建任务 ====================
+  build:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: 检出代码
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      # Step 2: 设置 JDK
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      
+      # Step 3: 授予 Gradle 执行权限
+      - name: 🔧 Grant execute permission for gradlew
+        run: chmod +x gradlew
+      
+      # Step 4: 清理和准备
+      - name: 🧹 Clean project
+        run: ./gradlew clean
+      
+      # Step 5: 编译 Debug 版本
+      - name: 📦 Build Debug APK
+        run: ./gradlew assembleDebug
+      
+      # Step 6: 运行单元测试
+      - name: 🧪 Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+      
+      # Step 7: 生成测试报告
+      - name: 📊 Generate Test Report
+        if: always()
+        run: ./gradlew jacocoTestReport
+      
+      # Step 8: 上传 Debug APK
+      - name: 📤 Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-${{ env.VERSION_NAME }}.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+      
+      # Step 9: 上传测试报告
+      - name: 📤 Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+  
+  # ==================== 2. 代码质量检查 ====================
+  code-quality:
+    name: 🔍 Code Quality Check
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      
+      - name: 🔧 Grant execute permission for gradlew
+        run: chmod +x gradlew
+      
+      # Ktlint 代码格式检查
+      - name: 📝 Run Ktlint
+        run: ./gradlew ktlintCheck || true
+      
+      # Detekt 静态代码分析
+      - name: 🔬 Run Detekt
+        run: ./gradlew detekt || true
+      
+      # Lint 检查
+      - name: 🏷️ Run Android Lint
+        run: ./gradlew lint || true
+  
+  # ==================== 3. Release 版本（仅 Tag 触发） ====================
+  release:
+    name: 🚀 Release APK
+    runs-on: ubuntu-latest
+    needs: [build, code-quality]
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: ☕ Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      
+      - name: 🔧 Grant execute permission for gradlew
+        run: chmod +x gradlew
+      
+      # 解码签名密钥库
+      - name: 🔐 Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo $ENCODED_STRING | base64 --decode > keystore.jks
+          echo "storePassword=$RELEASE_KEYSTORE_PASSWORD" > keystore.properties
+          echo "keyAlias=$RELEASE_KEY_ALIAS" >> keystore.properties
+          echo "keyPassword=$RELEASE_KEY_PASSWORD" >> keystore.properties
+      
+      # 编译 Release 版本
+      - name: 📦 Build Release APK
+        env:
+          KEYSTORE_PATH: ../keystore.jks
+        run: ./gradlew assembleRelease
+      
+      # 编译 Release Bundle (Google Play)
+      - name: 📱 Build AAB
+        env:
+          KEYSTORE_PATH: ../keystore.jks
+        run: ./gradlew bundleRelease
+      
+      # 验证签名
+      - name: ✅ Verify APK Signature
+        run: jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
+      
+      # 上传 Release APK
+      - name: 📤 Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ env.VERSION_NAME }}.apk
+          path: app/build/outputs/apk/release/app-release.apk
+      
+      # 上传 AAB
+      - name: 📤 Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ env.VERSION_NAME }}.aab
+          path: app/build/outputs/bundle/release/app-release.aab
+      
+      # 创建 GitHub Release
+      - name: 🎉 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  # ==================== 4. 部署到测试平台（可选） ====================
+  deploy-test:
+    name: 📱 Deploy to Test Platform
+    runs-on: ubuntu-latest
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: 📥 Download Release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-${{ env.VERSION_NAME }}.apk
+      
+      # 示例：上传到蒲公英（可选）
+      - name: 🌸 Upload to PGYER
+        run: |
+          curl -X POST \
+            -F "_api_key=${{ secrets.PGYER_API_KEY }}" \
+            -F "file=@app-release-${{ env.VERSION_NAME }}.apk" \
+            -F "installType=1" \
+            -F "password=1234" \
+            https://www.pgyer.com/apiv2/app/upload \
+          || true  # 如果未配置密钥则跳过
+  
+  # ==================== 5. 通知（可选） ====================
+  notify:
+    name: 📢 Notification
+    runs-on: ubuntu-latest
+    needs: [release, deploy-test]
+    if: always() && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: 📧 Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: '🎉 WJFakeLocation v${{ env.VERSION_NAME }} 发布成功！'
+          body: |
+            新版本已发布！
+            
+            版本号：${{ env.VERSION_NAME }}
+            构建号：${{ env.VERSION_CODE }}
+            
+            下载地址：https://github.com/${{ github.repository }}/releases/latest
+            
+            ---
+            WJFakeLocation CI/CD System
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: 'WJFakeLocation CI'

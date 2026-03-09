@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.room)
+    id("jacoco") // 代码覆盖率
 }
 
 android {
@@ -15,8 +16,8 @@ android {
         applicationId = "com.steadywj.wjfakelocation"
         minSdk = 33
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = System.getenv("VERSION_NAME") ?: "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -28,6 +29,21 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            
+            // CI/CD 签名配置
+            signingConfig = if (System.getenv("KEYSTORE_PATH") != null) {
+                signingConfigs.create("release") {
+                    storeFile = file(System.getenv("KEYSTORE_PATH"))
+                    storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD") 
+                        ?: project.findProperty("RELEASE_KEYSTORE_PASSWORD") as String? ?: ""
+                    keyAlias = System.getenv("RELEASE_KEY_ALIAS") 
+                        ?: project.findProperty("RELEASE_KEY_ALIAS") as String? ?: ""
+                    keyPassword = System.getenv("RELEASE_KEY_PASSWORD") 
+                        ?: project.findProperty("RELEASE_KEY_PASSWORD") as String? ?: ""
+                }
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
     compileOptions {
@@ -120,4 +136,49 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+// ==================== Jacoco 代码覆盖率配置 ====================
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn(tasks.test)
+    
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+    
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        "**/*Hilt*.*",
+        "**/*_Factory.*",
+        "**/*_MembersInjector.*"
+    )
+    
+    val kotlinTree = fileTree(mapOf(
+        "dir" to "$buildDir/tmp/kotlin-classes/debug",
+        "excludes" to fileFilter
+    ))
+    
+    val javaTree = fileTree(mapOf(
+        "dir" to "$buildDir/intermediates/javac/debug",
+        "excludes" to fileFilter
+    ))
+    
+    classDirectories.setFrom(files(kotlinTree, javaTree))
+    sourceDirectories.setFrom(files("$projectDir/src/main/java"))
+    executionData.setFrom(fileTree(mapOf(
+        "dir" to "$buildDir",
+        "includes" to listOf("outputs/unit_test_code_coverage/**/**/*.exec")
+    )))
 }
