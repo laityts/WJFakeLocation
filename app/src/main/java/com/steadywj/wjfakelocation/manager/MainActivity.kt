@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 检�?Xposed 模块是否激�?
+        // 检查 Xposed 模块是否激活
         checkXposedModuleStatus()
         
         // 请求必要权限
@@ -61,13 +61,13 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun checkXposedModuleStatus() {
-        // 如果模块未激活，app 将无法使�?MODE_WORLD_READABLE
+        // 如果模块未激活，app 将无法使用 MODE_WORLD_READABLE
         try {
             getSharedPreferences("xposed_shared_prefs", MODE_WORLD_READABLE)
             isXposedModuleEnabled = true
         } catch (e: SecurityException) {
             isXposedModuleEnabled = false
-            Log.e(TAG, "SecurityException: Xposed 模块可能未激�?- ${e.message}", e)
+            Log.e(TAG, "SecurityException: Xposed 模块可能未激活 - ${e.message}", e)
         } catch (e: Exception) {
             isXposedModuleEnabled = false
             Log.e(TAG, "Exception: ${e.message}", e)

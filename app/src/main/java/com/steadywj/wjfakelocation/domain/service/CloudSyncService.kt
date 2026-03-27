@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -258,7 +259,7 @@ class CloudSyncService @Inject constructor(
 /**
  * Supabase 收藏夹 DTO
  */
-kotlinx.serialization.Serializable
+@kotlinx.serialization.Serializable
 data class FavoriteSupabaseDto(
     val id: Long? = null,
     val device_id: String,

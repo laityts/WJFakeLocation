@@ -1,6 +1,7 @@
 // FakeWifiInfo.kt
 package com.steadywj.wjfakelocation.data.model
 
+import kotlinx.serialization.Serializable
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 

@@ -40,7 +40,7 @@ fun MapScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* 定位到当前位�?*/ },
+                onClick = { /* 定位到当前位置 */ },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.MyLocation, contentDescription = "当前位置")

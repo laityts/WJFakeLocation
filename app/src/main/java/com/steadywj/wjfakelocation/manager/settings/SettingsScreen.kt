@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.steadywj.wjfakelocation.R
-import com.steadywj.wjfakelocation.manager.settings.SettingsViewModel
+import com.steadywj.wjfakelocation.manager.settings.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +71,7 @@ fun SettingsScreen(
                     // 精度设置
                     SettingSwitchItem(
                         title = stringResource(id = R.string.settings_use_accuracy),
-                        subtitle = if (settings.useAccuracy) "${settings.accuracy}�? else "关闭",
+                        subtitle = if (settings.useAccuracy) "${settings.accuracy}米" else "关闭",
                         checked = settings.useAccuracy,
                         onCheckedChange = { viewModel.updateAccuracy(it, settings.accuracy) }
                     )
@@ -81,7 +81,7 @@ fun SettingsScreen(
                     // 海拔设置
                     SettingSwitchItem(
                         title = stringResource(id = R.string.settings_use_altitude),
-                        subtitle = if (settings.useAltitude) "${settings.altitude}�? else "关闭",
+                        subtitle = if (settings.useAltitude) "${settings.altitude}米" else "关闭",
                         checked = settings.useAltitude,
                         onCheckedChange = { viewModel.updateAltitude(it, settings.altitude) }
                     )
@@ -91,7 +91,7 @@ fun SettingsScreen(
                     // 随机偏移
                     SettingSwitchItem(
                         title = stringResource(id = R.string.settings_use_randomize),
-                        subtitle = if (settings.useRandomize) "半径${settings.randomizeRadius}�? else "关闭",
+                        subtitle = if (settings.useRandomize) "半径${settings.randomizeRadius}米" else "关闭",
                         checked = settings.useRandomize,
                         onCheckedChange = { viewModel.updateRandomize(it, settings.randomizeRadius) }
                     )
@@ -101,7 +101,7 @@ fun SettingsScreen(
                     // 速度设置
                     SettingSwitchItem(
                         title = stringResource(id = R.string.settings_use_speed),
-                        subtitle = if (settings.useSpeed) "${settings.speed}�?�? else "关闭",
+                        subtitle = if (settings.useSpeed) "${settings.speed}米/秒" else "关闭",
                         checked = settings.useSpeed,
                         onCheckedChange = { viewModel.updateSpeed(it, settings.speed) }
                     )
@@ -138,8 +138,8 @@ fun SettingsScreen(
                         
                         OutlinedButton(
                             onClick = {
-                                // 实现加载模式逻辑，可显示模式选择对话�?
-                                // TODO: 添加模式选择对话�?UI
+                                // 实现加载模式逻辑，可显示模式选择对话框
+                                // TODO: 添加模式选择对话框 UI
                                 showProfileDialog = true
                             },
                             modifier = Modifier.weight(1f)

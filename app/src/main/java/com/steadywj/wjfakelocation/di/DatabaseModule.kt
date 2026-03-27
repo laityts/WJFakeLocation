@@ -8,6 +8,7 @@ import com.steadywj.wjfakelocation.data.local.FavoriteLocationDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.SingletonComponent
 import javax.inject.Singleton

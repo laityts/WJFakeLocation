@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.steadywj.wjfakelocation.R
-import com.steadywj.wjfakelocation.manager.settings.SettingsViewModel
+import com.steadywj.wjfakelocation.manager.settings.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +74,7 @@ fun ApiKeySettingsScreen(
                 }
             }
             
-            // API Key 输入�?
+            // API Key 输入框
             OutlinedTextField(
                 value = apiKey,
                 onValueChange = { apiKey = it },
@@ -89,7 +89,7 @@ fun ApiKeySettingsScreen(
             
             Spacer(modifier = Modifier.weight(1f))
             
-            // 按钮�?
+            // 按钮组
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -130,7 +130,7 @@ fun ApiKeySettingsScreen(
             }
         }
         
-        // 使用指南对话�?
+        // 使用指南对话框
         if (showGuideDialog) {
             AlertDialog(
                 onDismissRequest = { showGuideDialog = false },
