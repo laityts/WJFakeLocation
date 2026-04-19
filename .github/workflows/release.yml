@@ -1,6 +1,7 @@
 name: Release APK
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'  # 匹配 v1.0.0, v2.0.0-rc1 等版本标签
